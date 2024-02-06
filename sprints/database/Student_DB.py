@@ -33,16 +33,15 @@ class StudentDB:
             if 'connection' in locals() and connection.is_connected():
                 connection.close()
 
-    def insert_student(
-            self,
-            fname: str,
-            lname: str,
-            student_no: str,
-            college: str,
-            program: str,
-            yr_lvl: int,
-            is_registered: bool = True,
-            is_enrolled: bool = False) -> bool:
+    def insert_student(self,
+                       fname: str,
+                       lname: str,
+                       student_no: str,
+                       college: str,
+                       program: str,
+                       yr_lvl: int,
+                       is_registered: bool = True,
+                       is_enrolled: bool = False) -> bool:
         try:
             connection = mysql.connector.connect(
                 host=self.host,

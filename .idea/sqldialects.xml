@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="SqlDialectMappings">
-    <file url="file://$PROJECT_DIR$/sprints/database/Course_DB.py" dialect="GenericSQL" />
+    <file url="file://$PROJECT_DIR$/sprints/database/Course_DB.py" dialect="MySQL" />
+    <file url="file://$PROJECT_DIR$/sprints/database/StCr_DB.py" dialect="MySQL" />
     <file url="file://$PROJECT_DIR$/sprints/database/Student_DB.py" dialect="MySQL" />
-    <file url="file://$PROJECT_DIR$/sprints/database/User_DB.py" dialect="GenericSQL" />
+    <file url="file://$PROJECT_DIR$/sprints/database/User_DB.py" dialect="MySQL" />
   </component>
 </project>
