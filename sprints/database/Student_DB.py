@@ -66,7 +66,15 @@ class StudentDB:
             if 'connection' in locals() and connection.is_connected():
                 connection.close()
 
-    def update_student_info(self, student_no, is_registered):
+    def update_student_info(self,
+                            student_no: str,
+                            fname: str = None,
+                            lname: str = None,
+                            college: str = None,
+                            program: str = None,
+                            year: int = None,
+                            is_registered: bool = None,
+                            is_enrolled: bool = None):
         try:
             connection = mysql.connector.connect(
                 host=self.host,
@@ -76,8 +84,14 @@ class StudentDB:
             )
 
             with connection.cursor() as data_cursor:
-                query = "UPDATE student SET is_registered = %s WHERE student_number = %s"
-                data_cursor = data_cursor.execute(query, (is_registered, student_no))
+                update_columns = [(col, val) for col, val in [('first_name', fname), ('last_name', lname),
+                                                              ('college', college), ('program', program),
+                                                              ('year_lvl', year), ('is_registered', is_registered),
+                                                              ('is_enrolled', is_enrolled)] if val is not None]
+
+                query = (f"UPDATE student SET SET {', '.join([f'{col} = %s' for col, val in update_columns])}"
+                         f"WHERE student_number = %s")
+                data_cursor = data_cursor.execute(query, [val for col, val in update_columns] + [student_no])
 
             connection.commit()
             return True

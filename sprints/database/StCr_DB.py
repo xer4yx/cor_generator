@@ -45,7 +45,7 @@ class StCrDB:
             if 'connection' in locals() and connection.is_connected():
                 connection.close()
 
-    def delete_student_course(self, student_id, course_section):
+    def delete_student_course(self, student_id, course_section=None):
         try:
             connection = mysql.connector.connect(
                 host=self.host,
@@ -55,8 +55,12 @@ class StCrDB:
             )
 
             with connection.cursor() as data_cursor:
-                query = "DELETE FROM student_course WHERE student_id = %s AND course_section = %s"
-                data_cursor.execute(query, (student_id, course_section))
+                if course_section is not None:
+                    query = "DELETE FROM student_course WHERE student_id = %s AND course_section = %s"
+                    data_cursor.execute(query, (student_id, course_section))
+                else:
+                    query = "DELETE FROM student_course WHERE student_id = %s"
+                    data_cursor.execute(query, (student_id,))
 
             connection.commit()
             return True

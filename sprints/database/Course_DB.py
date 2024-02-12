@@ -29,7 +29,7 @@ class CourseDB:
 
             with connection.cursor() as data_cursor:
                 query = ("INSERT INTO course (course_code, title, section, units, days, time, room, year, term) "
-                         "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)")
+                         "VALUES (%s, %s, %s, %s, %s, %s, IFNULL(%s, DEFAULT(room)), %s, %s)")
                 data_cursor.execute(query, (course_code, title, section, units, days, time, room, year, term))
 
             connection.commit()

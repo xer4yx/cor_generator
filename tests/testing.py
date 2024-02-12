@@ -1,8 +1,5 @@
-from main.Data_Security import Security
-from sprints.database.User_DB import UserDB
+from main.Admin import Admin
 
 if __name__ == '__main__':
-    username = str('admin')
-    password = str('password123')
-    udb = UserDB()
-    Security.check_credentials(username, password)
+    privilege = Admin()
+    privilege.populate_tables(20)
