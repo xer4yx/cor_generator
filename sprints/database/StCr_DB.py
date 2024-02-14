@@ -101,6 +101,7 @@ class StCrDB:
                                                               ('course_room', course_room)] if val is not None]
                 query = (f"UPDATE courses SET {', '.join([f'{col} = %s' for col, val in update_columns])} "
                          f"WHERE student_id = %s")
+                data_cursor.execute(query, ([val for col, val in update_columns], student_id))
 
         except DataUpdateException as e:
             print(f"{e.__class__.__name__}: {e}")
@@ -110,7 +111,7 @@ class StCrDB:
             if 'connection' in locals() and connection.is_connected():
                 connection.close()
 
-    def select_student_course(self):
+    def select_student_courses(self, student_id: str):
         try:
             connection = mysql.connector.connect(
                 host=self.host,
@@ -120,11 +121,14 @@ class StCrDB:
             )
 
             with connection.cursor() as data_cursor:
-                pass
+                query = "SELECT * FROM student_course WHERE student_id = %s"
+                data_cursor.execute(query, (student_id,))
+                results = data_cursor.fetchall()
+                return results
 
-        except DataSelectionException as e:
-            print(f"{e.__class__.__name__}: {e}")
-            return False
+        except mysql.connector.Error as e:
+            print(f"Error selecting student courses: {e}")
+            return []
 
         finally:
             if 'connection' in locals() and connection.is_connected():

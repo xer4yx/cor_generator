@@ -13,6 +13,12 @@ class CredentialError(Exception):
         super().__init__(self.message)
 
 
+class NullError(TypeError):
+    def __init__(self, message=""):
+        self.message = message
+        super().__init__(self.message)
+
+
 class DataInsertionException(mysql.connector.Error):
     def __init__(self, message="An error occurred while inserting data"):
         self.message = message

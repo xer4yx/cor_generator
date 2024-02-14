@@ -125,7 +125,7 @@ class StudentDB:
             if 'connection' in locals() and connection.is_connected():
                 connection.close()
 
-    def get_student_info(self, student_number):
+    def get_student_info(self, student_number: str):
         try:
             connection = mysql.connector.connect(
                 host=self.host,
@@ -136,7 +136,7 @@ class StudentDB:
 
             with connection.cursor() as data_cursor:
                 query = "SELECT * FROM student WHERE student_number = %s"
-                data_cursor.execute(query, student_number)
+                data_cursor.execute(query, (student_number,))
                 result = data_cursor.fetchone()
 
                 return result

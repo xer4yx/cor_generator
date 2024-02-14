@@ -1,5 +1,3 @@
-from User import User
-
 import os
 
 class Interface:
@@ -52,4 +50,3 @@ class Interface:
               FEU Institute of Technology
 
               """)
-        User.generate_cor()

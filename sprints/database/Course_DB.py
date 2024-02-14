@@ -1,4 +1,5 @@
 import mysql.connector
+from typing import List, Dict, Union
 from sprints.exceptions.CustomExceptions import *
 
 
@@ -31,6 +32,35 @@ class CourseDB:
                 query = ("INSERT INTO course (course_code, title, section, units, days, time, room, year, term) "
                          "VALUES (%s, %s, %s, %s, %s, %s, IFNULL(%s, DEFAULT(room)), %s, %s)")
                 data_cursor.execute(query, (course_code, title, section, units, days, time, room, year, term))
+
+            connection.commit()
+            return True
+
+        except DataInsertionException as e:
+            print(f"{e.__class__.__name__}: {e}")
+            return False
+
+        finally:
+            if 'connection' in locals() and connection.is_connected():
+                connection.close()
+
+    def add_course_batch(self, courses: List[Dict[str, Union[str, int]]]) -> bool:
+        try:
+            connection = mysql.connector.connect(
+                host=self.host,
+                user=self.user,
+                password=self.password,
+                database=self.database
+            )
+
+            with connection.cursor() as data_cursor:
+                query = ("INSERT INTO course (course_code, title, section, units, days, time, room, year, term) "
+                         "VALUES (%s, %s, %s, %s, %s, %s, IFNULL(%s, DEFAULT(room)), %s, %s)")
+                for course in courses:
+                    data_cursor.execute(query, (
+                        course['course_code'], course['title'], course['section'], course['units'],
+                        course['days'], course['time'], course['room'], course['year'], course['term']
+                    ))
 
             connection.commit()
             return True
@@ -105,7 +135,7 @@ class CourseDB:
             if 'connection' in locals() and connection.is_connected():
                 connection.close()
 
-    def select_course(self, course: str, section: str):
+    def select_course_by_section(self, course: str, section: str):
         try:
             connection = mysql.connector.connect(
                 host=self.host,
@@ -123,6 +153,30 @@ class CourseDB:
 
         except DataSelectionException as e:
             print(f"{e.__class__.__name__}: {e}")
+
+        finally:
+            if 'connection' in locals() and connection.is_connected():
+                connection.close()
+
+    def select_course_by_year(self, year: int):
+        try:
+            connection = mysql.connector.connect(
+                host=self.host,
+                user=self.user,
+                password=self.password,
+                database=self.database
+            )
+
+            with connection.cursor() as data_cursor:
+                query = "SELECT * FROM course WHERE year = %s"
+                data_cursor.execute(query, (year,))
+                result = data_cursor.fetchall()
+
+                return result
+
+        except DataSelectionException as e:
+            print(f"{e.__class__.__name__}: {e}")
+            return []
 
         finally:
             if 'connection' in locals() and connection.is_connected():

@@ -1,5 +1,5 @@
-from main.Admin import Admin
+from main.Student import Student
 
 if __name__ == '__main__':
-    privilege = Admin()
-    privilege.populate_tables(20)
+    human = Student('admin')
+    human.view_available_course()
