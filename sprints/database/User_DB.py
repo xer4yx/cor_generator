@@ -1,8 +1,8 @@
 import mysql.connector
-from main.Data_Security import Security
+from sprints.Data_Security import Security
 
 
-class UserDB():
+class UserDB:
     def __init__(self, host="localhost", user="root", password="Vertig@6925", database="educ_database"):
         self.host = host
         self.user = user
@@ -19,8 +19,9 @@ class UserDB():
             )
 
             with connection.cursor() as data_cursor:
-                query = "INSERT INTO user (student_number, password) VALUES (%s, %s)"
-                data_cursor.execute(query, (student_number, Security.hash_string(password)))
+                salt, hashed = Security.hash_string(password)
+                query = "INSERT INTO user (student_number, salt, password) VALUES (%s, %s, %s)"
+                data_cursor.execute(query, (student_number, salt, hashed))
 
             connection.commit()
 
@@ -75,7 +76,7 @@ class UserDB():
             if 'connection' in locals() and connection.is_connected():
                 connection.close()
 
-    def update_user(self, student_number, new_password):
+    def update_user(self, student_number, new_password, salt):
         try:
             connection = mysql.connector.connect(
                 host=self.host,
@@ -85,8 +86,8 @@ class UserDB():
             )
 
             with connection.cursor() as data_cursor:
-                query = "UPDATE user SET password = %s WHERE student_number = %s"
-                data_cursor.execute(query, (new_password, student_number))
+                query = "UPDATE user SET password = %s, salt = %s WHERE student_number = %s"
+                data_cursor.execute(query, (new_password, salt, student_number))
 
             connection.commit()
 

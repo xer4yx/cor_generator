@@ -1,5 +1,5 @@
 import mysql.connector
-from typing import List, Dict, Union
+from typing import List, Dict, Union, Sequence
 from sprints.exceptions.CustomExceptions import *
 
 
@@ -10,16 +10,16 @@ class CourseDB:
         self.password = password
         self.database = database
 
-    def add_course(self,
-                   course_code: str,
-                   title: str,
-                   section: str,
-                   units: int,
-                   days: str,
-                   time: str,
-                   year: int,
-                   term: int,
-                   room: str = None) -> bool:
+    def insert_single(self,
+                      course_code: str,
+                      title: str,
+                      section: str,
+                      units: int,
+                      days: str,
+                      time: str,
+                      year: int,
+                      term: int,
+                      room: str = None) -> bool:
         try:
             connection = mysql.connector.connect(
                 host=self.host,
@@ -44,7 +44,7 @@ class CourseDB:
             if 'connection' in locals() and connection.is_connected():
                 connection.close()
 
-    def add_course_batch(self, courses: List[Dict[str, Union[str, int]]]) -> bool:
+    def insert_by_batch(self, courses: List[Dict[str, Union[str, int]]]) -> bool:
         try:
             connection = mysql.connector.connect(
                 host=self.host,
@@ -111,7 +111,7 @@ class CourseDB:
             if 'connection' in locals() and connection.is_connected():
                 connection.close()
 
-    def delete_course(self, course: str, section: str) -> bool:
+    def delete_single_row(self, course: str, section: str) -> bool:
         try:
             connection = mysql.connector.connect(
                 host=self.host,
@@ -135,7 +135,31 @@ class CourseDB:
             if 'connection' in locals() and connection.is_connected():
                 connection.close()
 
-    def select_course_by_section(self, course: str, section: str):
+    def delete_all_row(self) -> bool:
+        try:
+            connection = mysql.connector.connect(
+                host=self.host,
+                user=self.user,
+                password=self.password,
+                database=self.database
+            )
+
+            with connection.cursor() as data_cursor:
+                query = "DELETE FROM course"
+                data_cursor.execute(query)
+
+            connection.commit()
+            return True
+
+        except DataDeletionException as e:
+            print(f"{e.__class__.__name__}: {e}")
+            return False
+
+        finally:
+            if 'connection' in locals() and connection.is_connected():
+                connection.close()
+
+    def select_by_section(self, course: str, section: str) -> Sequence:
         try:
             connection = mysql.connector.connect(
                 host=self.host,
@@ -158,7 +182,7 @@ class CourseDB:
             if 'connection' in locals() and connection.is_connected():
                 connection.close()
 
-    def select_course_by_year(self, year: int):
+    def select_by_year(self, year: int) -> Sequence:
         try:
             connection = mysql.connector.connect(
                 host=self.host,
@@ -170,6 +194,30 @@ class CourseDB:
             with connection.cursor() as data_cursor:
                 query = "SELECT * FROM course WHERE year = %s"
                 data_cursor.execute(query, (year,))
+                result = data_cursor.fetchall()
+
+                return result
+
+        except DataSelectionException as e:
+            print(f"{e.__class__.__name__}: {e}")
+            return []
+
+        finally:
+            if 'connection' in locals() and connection.is_connected():
+                connection.close()
+
+    def select_all_row(self) -> Sequence:
+        try:
+            connection = mysql.connector.connect(
+                host=self.host,
+                user=self.user,
+                password=self.password,
+                database=self.database
+            )
+
+            with connection.cursor() as data_cursor:
+                query = "SELECT DISTINCT course_code, title, units, year, term FROM course ORDER BY year, term"
+                data_cursor.execute(query)
                 result = data_cursor.fetchall()
 
                 return result

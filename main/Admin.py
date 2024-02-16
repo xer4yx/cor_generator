@@ -16,15 +16,13 @@ class Admin:
         self.__crdb = CourseDB()
         self.__stcr = StCrDB()
 
-    def generate_student_id(self):
-        student_id = time.strftime("%Y%m") + str(random.randint(101, 999))
-        data = self.__stdb.get_student_num_all()
-        if data.__contains__(student_id):
-            self.generate_student_id()
+    def _generate_student_id(self):
+        all_ids = set(time.strftime("%Y%m") + str(i) for i in range(101, 1000))
+        existing_ids = set(self.__stdb.get_student_num_all())
+        new_ids = all_ids - existing_ids
+        return min(new_ids) if new_ids else None
 
-        return student_id
-
-    def add_user(self, student_id):
+    def _add_user(self, student_id):
         data = self.__stdb.get_student_num_all()
         if student_id in data:
             password = str(input(f"Enter Password for {student_id}: ")).encode("utf-8")
@@ -32,24 +30,24 @@ class Admin:
         else:
             print(f"Student {student_id} not found")
 
-    def add_student(self):
+    def _add_student(self):
         os.system('cls')
         print("---Add Student to School Record---")
         fname = str(input("Enter given name: "))
         lname = str(input("Enter surname: "))
-        student_no = self.generate_student_id()
+        student_no = self._generate_student_id()
         college = str(input("Enter College: "))
         program = str(input("Enter Program: "))
         yr_lvl = int(input("Enter Year Level: "))
 
         if self.__stdb.insert_student(fname, lname, student_no, college, program, yr_lvl):
-            self.add_user(student_no)
+            self._add_user(student_no)
             print(f"Record added successfully. "
                   f"Student ID: {student_no}")
         else:
             print(f"Student ID {student_no} failed to add")
 
-    def add_course(self):
+    def _add_course(self):
         os.system('cls')
         course_code = str(input("Enter Course Code for the subject: "))
         title = str(input("Enter course name: "))
@@ -60,13 +58,13 @@ class Admin:
         room = eval(input("Enter room for the course. Leave blank for TBA: "))
         year = int(input("Enter year for the course: "))
         term = int(input("Enter term for the course: "))
-        if self.__crdb.add_course(course_code, title, section, units, days, time, year, term, room):
+        if self.__crdb.insert_single(course_code, title, section, units, days, time, year, term, room):
             print(f"Course Added successfully. "
                   f"Course ID: {course_code}")
         else:
             print(f"Course ID {course_code} failed to add")
 
-    def delete_student_data(self):
+    def _delete_student_data(self):
         os.system('cls')
         print("---Delete Student to School Record---")
         student_no = str(input("Enter Student Number: "))
@@ -79,35 +77,38 @@ class Admin:
         else:
             print("Invalid student record.")
 
-    def delete_course(self):
+    def _delete_course(self):
         os.system('cls')
         print("---Delete Course to School Record---")
         course_code = str(input("Enter Course Code: "))
         section = str(input("Enter Section: "))
-        data = self.__crdb.select_course(course_code, section)
+        data = self.__crdb.select_by_section(course_code, section)
         if data:
-            if self.__crdb.delete_course(course_code, section):
+            if self.__crdb.delete_single_row(course_code, section):
                 print(f"Course {course_code} has been deleted")
             else:
                 print("Failed to delete course")
         else:
             print("Course not found")
 
-    def update_course(self):
+    def _update_course(self):
         os.system('cls')
         print("---Update Course---")
         course_code = str(input("Enter Course Code:"))
         section = str(input("Enter section for the course code:"))
-        data = self.__crdb.select_course(course_code, section)
+        data = self.__crdb.select_by_section(course_code, section)
         if data:
-            choice = int(input("""Select what record you want to update
-                [1] Title
-                [2] Units
-                [3] Days
-                [4] Time
-                [5] Room
-                [6] Year
-                [7] Term"""))
+            choice = int(input("""
+            Select what record you want to update
+            [1] Title
+            [2] Units
+            [3] Days
+            [4] Time
+            [5] Room
+            [6] Year
+            [7] Term
+            
+            Enter your choice: """))
             match choice:
                 case 1:
                     title = str(input("Update course title: "))
@@ -142,21 +143,25 @@ class Admin:
         else:
             print("Course doesn't exist")
 
-    def update_student(self):
+    def _update_student(self):
         os.system('cls')
         print("---Update Student Record---")
         student_id = str(input("Enter Student ID: "))
         data = self.__stdb.get_student_num_all()
         if student_id in data:
-            choice = int(input("""Select what record you want to update
-                [1] First Name
-                [2] Last Name
-                [3] College
-                [4] Program
-                [5] Year Level
-                [6] Registration Status
-                [7] Enrollment Status
-                [8] Exit"""))
+            choice = int(input("""
+            Select what record you want to update
+            [1] First Name
+            [2] Last Name
+            [3] College
+            [4] Program
+            [5] Year Level
+            [6] Registration Status
+            [7] Enrollment Status
+            [8] Admin Status
+            [9] Exit
+            
+            Enter your choice: """))
             match choice:
                 case 1:
                     fname = str(input("Update student given name: "))
@@ -187,6 +192,10 @@ class Admin:
                     self.__stdb.update_student_info(student_id, is_enrolled=enrollment)
 
                 case 8:
+                    admin = bool(input("Update student admin status: "))
+                    self.__stdb.update_student_info(student_id, is_enrolled=admin)
+
+                case 9:
                     return
 
                 case _:
@@ -199,7 +208,7 @@ class Admin:
         for _ in range(1, max_population + 1):
             first = random.choice(populator_config.STUDENT_COL1)
             last = random.choice(populator_config.STUDENT_COL2)
-            id = self.generate_student_id()
+            id = self._generate_student_id()
             college = random.choice(populator_config.STUDENT_COL4)
             course = random.choice(populator_config.STUDENT_COL5[0]) if college == "Computer Studies" \
                 else random.choice(populator_config.STUDENT_COL5[1])
@@ -229,30 +238,32 @@ class Admin:
             year = random.choice(populator_config.COURSE_COL8)
             term = random.choice(populator_config.COURSE_COL9)
             units = random.choice(populator_config.COURSE_COL4)
-            for sections in populator_config.COURSE_COL3:
-                for schedules in populator_config.COURSE_COL5:
-                    for times in populator_config.COURSE_COL6:
-                        for rooms in populator_config.COURSE_COL7:
-                            course_data.append({
-                                "course_code": code,
-                                "title": title,
-                                "section": sections,
-                                "units": units,
-                                "days": schedules,
-                                "time": times,
-                                "year": year,
-                                "term": term,
-                                "room": rooms
-                            })
-                            if len(course_data) == batch_size:
-                                if self.__crdb.add_course_batch(course_data):
-                                    success += len(course_data)
-                                else:
-                                    faults += len(course_data)
-                                course_data = []
+            sections_list = populator_config.COURSE_COL3[year - 1]
+
+            for sections in sections_list:
+                schedules = random.choice(populator_config.COURSE_COL5)
+                times = random.choice(populator_config.COURSE_COL6)
+                rooms = random.choice(populator_config.COURSE_COL7)
+                course_data.append({
+                    "course_code": code,
+                    "title": title,
+                    "section": sections,
+                    "units": units,
+                    "days": schedules,
+                    "time": times,
+                    "year": year,
+                    "term": term,
+                    "room": rooms
+                })
+                if len(course_data) == batch_size:
+                    if self.__crdb.insert_by_batch(course_data):
+                        success += len(course_data)
+                    else:
+                        faults += len(course_data)
+                    course_data = []
 
         if course_data:
-            if self.__crdb.add_course_batch(course_data):
+            if self.__crdb.insert_by_batch(course_data):
                 success += len(course_data)
             else:
                 faults += len(course_data)
@@ -261,13 +272,15 @@ class Admin:
 
     def populate_tables(self):
         os.system('cls')
-        choice = str(input("""Do you want to populate the tables?
-            [] Yes
-            [] No
-            Enter your choice: """))
+        choice = str(input("""
+        Do you want to populate the tables?
+        [] Yes
+        [] No
+        
+        Enter your choice: """))
         if choice == "Yes":
-            max = int(input("How many do you want to populate: "))
-            self._student_populator(max_population=max)
+            max_pop = int(input("How many do you want to populate: "))
+            self._student_populator(max_population=max_pop)
             self._course_populator()
         elif choice == "No":
             pass
@@ -276,19 +289,20 @@ class Admin:
 
     def add_records_menu(self):
         os.system('cls')
-        choice = int(input("""COR Generator - Insert Record
-            [1] Insert on Student Table
-            [2] Insert on Course Table
-            [3] Exit
+        choice = int(input("""
+        COR Generator - Insert Record
+        [1] Insert on Student Table
+        [2] Insert on Course Table
+        [3] Exit
             
-            Enter your choice: """))
+        Enter your choice: """))
 
         match choice:
             case 1:
-                self.add_student()
+                self._add_student()
 
             case 2:
-                self.add_course()
+                self._add_course()
 
             case 3:
                 return
@@ -298,21 +312,26 @@ class Admin:
 
     def delete_records_menu(self):
         os.system('cls')
-        choice = int(input("""COR Generator - Insert Record
-            [1] Delete on Student Table
-            [2] Delete on Course Table
-            [3] Exit
+        choice = int(input("""
+        COR Generator - Insert Record
+        [1] Delete on Student Table
+        [2] Delete on Course Table
+        [3] Delete All on Course Table
+        [4] Exit
 
-            Enter your choice: """))
+        Enter your choice: """))
 
         match choice:
             case 1:
-                self.delete_student_data()
+                self._delete_student_data()
 
             case 2:
-                self.delete_course()
+                self._delete_course()
 
             case 3:
+                self.__crdb.delete_all_row()
+
+            case 4:
                 return
 
             case _:
@@ -320,19 +339,20 @@ class Admin:
 
     def update_records_menu(self):
         os.system('cls')
-        choice = int(input("""COR Generator - Insert Record
-            [1] Update on Student Table
-            [2] Update on Course Table
-            [3] Exit
+        choice = int(input("""
+        COR Generator - Insert Record
+        [1] Update on Student Table
+        [2] Update on Course Table
+        [3] Exit
 
-            Enter your choice: """))
+        Enter your choice: """))
 
         match choice:
             case 1:
-                self.update_student()
+                self._update_student()
 
             case 2:
-                self.update_course()
+                self._update_course()
 
             case 3:
                 return
@@ -341,29 +361,32 @@ class Admin:
                 print("Invalid choice. Please try again.")
 
     def admin_menu(self):
-        os.system('cls')
-        print("""COR Generator Admin
+        while True:
+            os.system('cls')
+            print("""
+            COR Generator Admin
             [1] Add Record
             [2] Delete Record
             [3] Update Record
             [4] Populate Tables
-            [5] Logout""")
-        choice = int(input("Enter your choice: "))
-        match choice:
-            case 1:
-                self.add_records_menu()
+            [5] Logout
+            """)
+            choice = int(input("Enter your choice: "))
+            match choice:
+                case 1:
+                    self.add_records_menu()
 
-            case 2:
-                self.delete_records_menu()
+                case 2:
+                    self.delete_records_menu()
 
-            case 3:
-                self.update_records_menu()
+                case 3:
+                    self.update_records_menu()
 
-            case 4:
-                self.populate_tables()
+                case 4:
+                    self.populate_tables()
 
-            case 5:
-                exit()
+                case 5:
+                    return
 
-            case _:
-                print("Invalid choice. Please try again.")
+                case _:
+                    print("Invalid choice. Please try again.")

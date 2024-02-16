@@ -30,16 +30,15 @@ COURSE_COL2 = ["INTRODUCTION TO COMPUTING", "COMPUTER PROGRAMMING 1", "PHYSICAL 
                "TECHNOPRENEURSHIP", "DATABASE", "NETWORKS AND COMMUNICATIONS 1", "AUTOMATA THEORY AND FORMAL LANGUAGES",
                "CS SPECIALIZATION 1 (STRUCTURED PROGRAMMING LANGUAGE)"]
 # Sections
-COURSE_COL3 = ["TA11", "TX12", "TN13", "TC14",
-               "TC21", "TN22", "TA23", "TX24",
-               "TN31", "TA32", "TC33", "TX34",
-               "TX41", "TN42", "TC43", "TA44"]
+COURSE_COL3 = [["TN11", "TN12", "TN13", "TN14"],
+               ["TN21", "TN22", "TN23", "TN24"],
+               ["TN31", "TN32", "TN33", "TN34"],
+               ["TN41", "TN42", "TN43", "TN44"]]
 # No of. Units
 COURSE_COL4 = [1, 2, 3]
 
 # Schedules
-COURSE_COL5 = ["M/W", "T/F", "M/M", "T/T", "W/W/", "TH/TH", "F/F", "S/S",
-               "TH/S", "W/TH", "M/S", "M/TH", "T/TH", "T/S", "W/F", "TH/F"]
+COURSE_COL5 = ["M/TH", "T/F", "W/S", "M/W", "TH/S"]
 
 # Time slots
 COURSE_COL6 = ["7:00 - 9:00", "10:00 - 12:50", "13:00 - 15:00", "15:00 - 17:00", "9:00 - 12:50", "17:00 - 19:00"]

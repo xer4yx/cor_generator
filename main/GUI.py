@@ -1,7 +1,7 @@
 import os
 
-class Interface:
 
+class Interface:
     @staticmethod
     def login_page():
         os.system('cls')

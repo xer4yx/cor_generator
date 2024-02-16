@@ -9,30 +9,6 @@ class StudentDB:
         self.password = password
         self.database = database
 
-    def delete_student(self, student_number: str):
-        try:
-            connection = mysql.connector.connect(
-                host=self.host,
-                user=self.user,
-                password=self.password,
-                database=self.database
-            )
-
-            with connection.cursor() as data_cursor:
-                query = "DELETE FROM student WHERE student_number = %s"
-                data_cursor.execute(query, (student_number,))
-
-            connection.commit()
-            return True
-
-        except DataDeletionException as e:
-            print(f"{e.__class__.__name__}: {e}")
-            return False
-
-        finally:
-            if 'connection' in locals() and connection.is_connected():
-                connection.close()
-
     def insert_student(self,
                        fname: str,
                        lname: str,
@@ -41,7 +17,8 @@ class StudentDB:
                        program: str,
                        yr_lvl: int,
                        is_registered: bool = True,
-                       is_enrolled: bool = False) -> bool:
+                       is_enrolled: bool = False,
+                       is_admin: bool = False) -> bool:
         try:
             connection = mysql.connector.connect(
                 host=self.host,
@@ -51,9 +28,9 @@ class StudentDB:
             )
 
             with connection.cursor() as data_cursor:
-                query = "INSERT INTO student VALUES (%s, %s, %s, %s, %s, %s, %s, %s)"
+                query = "INSERT INTO student VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)"
                 data_cursor = data_cursor.execute(query, (fname, lname, student_no, college, program, yr_lvl,
-                                                          is_registered, is_enrolled))
+                                                          is_registered, is_enrolled, is_admin))
 
             connection.commit()
             return True
@@ -74,7 +51,8 @@ class StudentDB:
                             program: str = None,
                             year: int = None,
                             is_registered: bool = None,
-                            is_enrolled: bool = None):
+                            is_enrolled: bool = None,
+                            is_admin: bool = None) -> bool:
         try:
             connection = mysql.connector.connect(
                 host=self.host,
@@ -87,7 +65,8 @@ class StudentDB:
                 update_columns = [(col, val) for col, val in [('first_name', fname), ('last_name', lname),
                                                               ('college', college), ('program', program),
                                                               ('year_lvl', year), ('is_registered', is_registered),
-                                                              ('is_enrolled', is_enrolled)] if val is not None]
+                                                              ('is_enrolled', is_enrolled),
+                                                              ('is_admin', is_admin)] if val is not None]
 
                 query = (f"UPDATE student SET SET {', '.join([f'{col} = %s' for col, val in update_columns])}"
                          f"WHERE student_number = %s")
@@ -97,6 +76,30 @@ class StudentDB:
             return True
 
         except DataUpdateException as e:
+            print(f"{e.__class__.__name__}: {e}")
+            return False
+
+        finally:
+            if 'connection' in locals() and connection.is_connected():
+                connection.close()
+
+    def delete_student(self, student_number: str):
+        try:
+            connection = mysql.connector.connect(
+                host=self.host,
+                user=self.user,
+                password=self.password,
+                database=self.database
+            )
+
+            with connection.cursor() as data_cursor:
+                query = "DELETE FROM student WHERE student_number = %s"
+                data_cursor.execute(query, (student_number,))
+
+            connection.commit()
+            return True
+
+        except DataDeletionException as e:
             print(f"{e.__class__.__name__}: {e}")
             return False
 

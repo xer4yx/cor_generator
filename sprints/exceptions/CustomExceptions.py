@@ -1,22 +1,19 @@
 import mysql.connector
 
 
-class RegistrationError(Exception):
+class RegistrationException(Exception):
     def __init__(self, message="You are not yet registered!"):
-        self.message = message
-        super().__init__(self.message)
+        super().__init__(message)
 
 
-class CredentialError(Exception):
+class CredentialException(Exception):
     def __init__(self, message="Invalid Username or Password"):
-        self.message = message
-        super().__init__(self.message)
+        super().__init__(message)
 
 
-class NullError(TypeError):
-    def __init__(self, message=""):
-        self.message = message
-        super().__init__(self.message)
+class NullException(TypeError):
+    def __init__(self, message="NoneType not acceptable in this object"):
+        super().__init__(message)
 
 
 class DataInsertionException(mysql.connector.Error):
