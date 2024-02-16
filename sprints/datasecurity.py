@@ -1,5 +1,5 @@
 import bcrypt as bc
-from sprints.exceptions.CustomExceptions import CredentialException
+from sprints.exceptions.customexceptions import CredentialException
 
 
 class Security:
@@ -20,7 +20,7 @@ class Security:
     @staticmethod
     def check_credentials(student_number, password):
         def get_db():
-            from sprints.database.User_DB import UserDB
+            from sprints.database.userdb import UserDB
             return UserDB()
 
         try:

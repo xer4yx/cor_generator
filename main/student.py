@@ -1,9 +1,9 @@
-from sprints.exceptions.CustomExceptions import *
-from sprints.Data_Security import Security
-from sprints.database.Course_DB import CourseDB
-from sprints.database.Student_DB import StudentDB
-from sprints.database.User_DB import UserDB
-from sprints.database.StCr_DB import StCrDB
+from sprints.exceptions.customexceptions import *
+from sprints.datasecurity import Security
+from sprints.database.coursedb import CourseDB
+from sprints.database.studentdb import StudentDB
+from sprints.database.userdb import UserDB
+from sprints.database.stcrdb import StCrDB
 
 
 class Student:

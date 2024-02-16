@@ -1,9 +1,8 @@
 import os
-from sprints.Data_Security import Security
-from sprints.database.Student_DB import StudentDB
-from main.Admin import Admin
-from main.Student import Student
-from sprints.exceptions.CustomExceptions import CredentialException
+from sprints.datasecurity import Security
+from sprints.database.studentdb import StudentDB
+from main.admin import Admin
+from main.student import Student
 
 
 def login_page():

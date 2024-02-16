@@ -1,7 +1,7 @@
 import mysql.connector
 from typing import List, Dict, Union
-from sprints.Data_Security import Security
-from sprints.exceptions.CustomExceptions import *
+from sprints.datasecurity import Security
+from sprints.exceptions.customexceptions import *
 
 
 class UserDB:

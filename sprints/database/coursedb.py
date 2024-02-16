@@ -1,6 +1,6 @@
 import mysql.connector
 from typing import List, Dict, Union, Sequence
-from sprints.exceptions.CustomExceptions import *
+from sprints.exceptions.customexceptions import *
 
 
 class CourseDB:

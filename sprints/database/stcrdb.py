@@ -1,5 +1,5 @@
 import mysql.connector
-from sprints.exceptions.CustomExceptions import *
+from sprints.exceptions.customexceptions import *
 
 
 class StCrDB:

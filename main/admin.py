@@ -2,12 +2,12 @@ import os
 import time
 import random
 
-from sprints.Data_Security import Security
-from sprints.database import populator_config
-from sprints.database.Student_DB import StudentDB
-from sprints.database.User_DB import UserDB
-from sprints.database.Course_DB import CourseDB
-from sprints.database.StCr_DB import StCrDB
+from sprints.datasecurity import Security
+from sprints.database import popconfig
+from sprints.database.studentdb import StudentDB
+from sprints.database.userdb import UserDB
+from sprints.database.coursedb import CourseDB
+from sprints.database.stcrdb import StCrDB
 
 
 class Admin:
@@ -206,13 +206,13 @@ class Admin:
         user_data = []
 
         for _ in range(1, max_population + 1):
-            first = random.choice(populator_config.STUDENT_COL1)
-            last = random.choice(populator_config.STUDENT_COL2)
+            first = random.choice(popconfig.STUDENT_COL1)
+            last = random.choice(popconfig.STUDENT_COL2)
             id = self._generate_student_id()
-            college = random.choice(populator_config.STUDENT_COL4)
-            course = random.choice(populator_config.STUDENT_COL5[0]) if college == "Computer Studies" \
-                else random.choice(populator_config.STUDENT_COL5[1])
-            year = random.choice(populator_config.STUDENT_COL6)
+            college = random.choice(popconfig.STUDENT_COL4)
+            course = random.choice(popconfig.STUDENT_COL5[0]) if college == "Computer Studies" \
+                else random.choice(popconfig.STUDENT_COL5[1])
+            year = random.choice(popconfig.STUDENT_COL6)
             enrolled = random.choice([True, False])
             salt, password = Security.hash_string(id.encode())
             student_data.append({
@@ -252,16 +252,16 @@ class Admin:
         success = 0
         course_data = []
 
-        for code, title in zip(populator_config.COURSE_COL1, populator_config.COURSE_COL2):
-            year = random.choice(populator_config.COURSE_COL8)
-            term = random.choice(populator_config.COURSE_COL9)
-            units = random.choice(populator_config.COURSE_COL4)
-            sections_list = populator_config.COURSE_COL3[year - 1]
+        for code, title in zip(popconfig.COURSE_COL1, popconfig.COURSE_COL2):
+            year = random.choice(popconfig.COURSE_COL8)
+            term = random.choice(popconfig.COURSE_COL9)
+            units = random.choice(popconfig.COURSE_COL4)
+            sections_list = popconfig.COURSE_COL3[year - 1]
 
             for sections in sections_list:
-                schedules = random.choice(populator_config.COURSE_COL5)
-                times = random.choice(populator_config.COURSE_COL6)
-                rooms = random.choice(populator_config.COURSE_COL7)
+                schedules = random.choice(popconfig.COURSE_COL5)
+                times = random.choice(popconfig.COURSE_COL6)
+                rooms = random.choice(popconfig.COURSE_COL7)
                 course_data.append({
                     "course_code": code,
                     "title": title,
