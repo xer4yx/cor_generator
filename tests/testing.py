@@ -1,6 +1,6 @@
-from main.Student import Student
-from main.Admin import Admin
-from sprints.Data_Security import Security
+from main.student import Student
+from main.admin import Admin
+from sprints.datasecurity import Security
 
 if __name__ == '__main__':
     privileges = Admin()

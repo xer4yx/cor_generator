@@ -1,8 +1,8 @@
 import os
 from sprints.datasecurity import Security
 from sprints.database.studentdb import StudentDB
-from main.admin import Admin
-from main.student import Student
+from admin import Admin
+from student import Student
 
 
 def login_page():
