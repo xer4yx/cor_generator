@@ -1,4 +1,5 @@
 import mysql.connector
+from typing import List, Dict, Union
 from sprints.exceptions.CustomExceptions import *
 
 
@@ -31,6 +32,37 @@ class StudentDB:
                 query = "INSERT INTO student VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)"
                 data_cursor = data_cursor.execute(query, (fname, lname, student_no, college, program, yr_lvl,
                                                           is_registered, is_enrolled, is_admin))
+
+            connection.commit()
+            return True
+
+        except DataInsertionException as e:
+            print(f"{e.__class__.__name__}: {e}")
+            return False
+
+        finally:
+            if 'connection' in locals() and connection.is_connected():
+                connection.close()
+
+    def insert_student_by_batch(self, students: List[Dict[str, Union[str, int]]]) -> bool:
+        try:
+            connection = mysql.connector.connect(
+                host=self.host,
+                user=self.user,
+                password=self.password,
+                database=self.database
+            )
+
+            with connection.cursor() as data_cursor:
+                query = ("INSERT INTO student (first_name, last_name, student_number, college, "
+                         "program, year_lvl, is_registered, is_enrolled, is_admin) "
+                         "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, IFNULL(%s, DEFAULT(is_admin)))")
+                for student in students:
+                    data_cursor.execute(query, (
+                        student['first_name'], student['last_name'], student['student_number'], student['college'],
+                        student['program'], student['year_lvl'], student['is_registered'], student['is_enrolled'],
+                        student['is_admin']
+                    ))
 
             connection.commit()
             return True
@@ -107,6 +139,30 @@ class StudentDB:
             if 'connection' in locals() and connection.is_connected():
                 connection.close()
 
+    def delete_all_students(self):
+        try:
+            connection = mysql.connector.connect(
+                host=self.host,
+                user=self.user,
+                password=self.password,
+                database=self.database
+            )
+
+            with connection.cursor() as data_cursor:
+                query = "DELETE FROM student WHERE is_admin = FALSE"
+                data_cursor.execute(query)
+
+            connection.commit()
+            return True
+
+        except DataDeletionException as e:
+            print(f"{e.__class__.__name__}: {e}")
+            return False
+
+        finally:
+            if 'connection' in locals() and connection.is_connected():
+                connection.close()
+
     def get_student_num_all(self):
         try:
             connection = mysql.connector.connect(
@@ -149,3 +205,30 @@ class StudentDB:
         finally:
             if 'connection' in locals() and connection.is_connected():
                 connection.close()
+
+    @staticmethod
+    def get_admin_status(student_number: str,
+                         host="localhost",
+                         user="root",
+                         password="Vertig@6925",
+                         database="educ_database"):
+        try:
+            connection = mysql.connector.connect(
+                host=host,
+                user=user,
+                password=password,
+                database=database
+            )
+
+            with connection.cursor() as data_cursor:
+                query = "SELECT is_admin FROM student WHERE student_number = %s"
+                data_cursor.execute(query, (student_number,))
+                result = data_cursor.fetchone()
+                return result
+        except DataSelectionException as e:
+            print(f"{e.__class__.__name__}: {e}")
+
+        finally:
+            if 'connection' in locals() and connection.is_connected():
+                connection.close()
+

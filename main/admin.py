@@ -2,6 +2,7 @@ import os
 import time
 import random
 
+from sprints.Data_Security import Security
 from sprints.database import populator_config
 from sprints.database.Student_DB import StudentDB
 from sprints.database.User_DB import UserDB
@@ -17,12 +18,9 @@ class Admin:
         self.__stcr = StCrDB()
 
     def _generate_student_id(self):
-        all_ids = set(time.strftime("%Y%m") + str(i) for i in range(101, 1000))
-        existing_ids = set(self.__stdb.get_student_num_all())
-        new_ids = all_ids - existing_ids
-        return min(new_ids) if new_ids else None
+        return time.strftime("%y%m") + str(random.randint(10000, 99999))
 
-    def _add_user(self, student_id):
+    def add_user(self, student_id):
         data = self.__stdb.get_student_num_all()
         if student_id in data:
             password = str(input(f"Enter Password for {student_id}: ")).encode("utf-8")
@@ -41,7 +39,7 @@ class Admin:
         yr_lvl = int(input("Enter Year Level: "))
 
         if self.__stdb.insert_student(fname, lname, student_no, college, program, yr_lvl):
-            self._add_user(student_no)
+            self.add_user(student_no)
             print(f"Record added successfully. "
                   f"Student ID: {student_no}")
         else:
@@ -193,7 +191,7 @@ class Admin:
 
                 case 8:
                     admin = bool(input("Update student admin status: "))
-                    self.__stdb.update_student_info(student_id, is_enrolled=admin)
+                    self.__stdb.update_student_info(student_id, is_admin=admin)
 
                 case 9:
                     return
@@ -201,10 +199,12 @@ class Admin:
                 case _:
                     print(f"Column {choice} doesn't exist in the table")
 
-    def _student_populator(self,
-                           max_population=5):
+    def _student_populator(self, max_population=5, batch_size=100):
         faults = 0
         success = 0
+        student_data = []
+        user_data = []
+
         for _ in range(1, max_population + 1):
             first = random.choice(populator_config.STUDENT_COL1)
             last = random.choice(populator_config.STUDENT_COL2)
@@ -214,18 +214,36 @@ class Admin:
                 else random.choice(populator_config.STUDENT_COL5[1])
             year = random.choice(populator_config.STUDENT_COL6)
             enrolled = random.choice([True, False])
+            salt, password = Security.hash_string(id.encode())
+            student_data.append({
+                "first_name": first,
+                "last_name": last,
+                "student_number": id,
+                "college": college,
+                "program": course,
+                "year_lvl": year,
+                "is_registered": True,
+                "is_enrolled": enrolled,
+                "is_admin": False
+            })
+            user_data.append({
+                "student_number": id,
+                "password": password,
+                "salt": salt
+            })
+            if len(student_data) and len(user_data) == batch_size:
+                if self.__stdb.insert_student_by_batch(student_data) and self.__udb.insert_user_by_batch(user_data):
+                    success += len(student_data)
+                else:
+                    faults += len(student_data)
+                student_data = []
+                user_data = []
 
-            if (self.__stdb.insert_student(fname=first,
-                                           lname=last,
-                                           student_no=id,
-                                           college=college,
-                                           program=course,
-                                           yr_lvl=year,
-                                           is_enrolled=enrolled)):
-                self.__udb.insert_user(student_number=id, password=id.encode())
-                success += 1
+        if student_data and user_data:
+            if self.__stdb.insert_student_by_batch(student_data) and self.__udb.insert_user_by_batch(user_data):
+                success += len(student_data)
             else:
-                faults += 1
+                faults += len(student_data)
 
         print(f"{self.__stdb.__class__.__name__} result: {success} data inserted while {faults} failures.")
 
@@ -315,9 +333,10 @@ class Admin:
         choice = int(input("""
         COR Generator - Insert Record
         [1] Delete on Student Table
-        [2] Delete on Course Table
-        [3] Delete All on Course Table
-        [4] Exit
+        [2] Delete All on Student Table
+        [3] Delete on Course Table
+        [4] Delete All on Course Table
+        [5] Exit
 
         Enter your choice: """))
 
@@ -326,12 +345,19 @@ class Admin:
                 self._delete_student_data()
 
             case 2:
-                self._delete_course()
+                self.__stcr.delete_all_student_courses()
+                self.__udb.delete_all_user()
+                self.__stdb.delete_all_students()
+                print("All students deleted.")
 
             case 3:
-                self.__crdb.delete_all_row()
+                self._delete_course()
 
             case 4:
+                self.__crdb.delete_all_row()
+                print("All courses deleted.")
+
+            case 5:
                 return
 
             case _:
@@ -364,7 +390,7 @@ class Admin:
         while True:
             os.system('cls')
             print("""
-            COR Generator Admin
+            COR Generator - Admin
             [1] Add Record
             [2] Delete Record
             [3] Update Record
@@ -386,7 +412,7 @@ class Admin:
                     self.populate_tables()
 
                 case 5:
-                    return
+                    break
 
                 case _:
                     print("Invalid choice. Please try again.")

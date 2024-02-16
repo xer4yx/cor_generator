@@ -26,11 +26,13 @@ class Security:
         try:
             udb = get_db()
             data = udb.select_user(student_number)
-            if student_number in data['student_number']:
+            user, stored_password, salt = data['student_number'], data['password'], data['salt']
+            if student_number in user:
                 if Security.check_password(password.encode('utf-8'),
-                                           data['password'].encode('utf-8'),
-                                           data['salt'].encode('utf-8')):
+                                           stored_password.encode('utf-8'),
+                                           salt.encode('utf-8')):
                     print("Password is correct")
+                    return True
                 else:
                     raise CredentialException("Password is wrong")
             else:
@@ -38,3 +40,4 @@ class Security:
 
         except CredentialException as e:
             print(e)
+            return False

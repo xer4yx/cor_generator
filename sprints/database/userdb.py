@@ -1,5 +1,7 @@
 import mysql.connector
+from typing import List, Dict, Union
 from sprints.Data_Security import Security
+from sprints.exceptions.CustomExceptions import *
 
 
 class UserDB:
@@ -32,6 +34,31 @@ class UserDB:
             if 'connection' in locals() and connection.is_connected():
                 connection.close()
 
+    def insert_user_by_batch(self, users: List[Dict[str, Union[str, int]]]) -> bool:
+        try:
+            connection = mysql.connector.connect(
+                host=self.host,
+                user=self.user,
+                password=self.password,
+                database=self.database
+            )
+
+            with connection.cursor() as data_cursor:
+                query = "INSERT INTO user (student_number, password, salt) VALUES (%s, %s, %s)"
+                for user in users:
+                    data_cursor.execute(query, (user['student_number'], user['password'], user['salt']))
+
+            connection.commit()
+            return True
+
+        except DataInsertionException as e:
+            print(f"{e.__class__.__name__}: {e}")
+            return False
+
+        finally:
+            if 'connection' in locals() and connection.is_connected():
+                connection.close()
+
     def delete_user(self, student_number):
         try:
             connection = mysql.connector.connect(
@@ -49,6 +76,30 @@ class UserDB:
 
         except mysql.connector.Error as e:
             print(f"Error: {e}")
+
+        finally:
+            if 'connection' in locals() and connection.is_connected():
+                connection.close()
+
+    def delete_all_user(self):
+        try:
+            connection = mysql.connector.connect(
+                host=self.host,
+                user=self.user,
+                password=self.password,
+                database=self.database
+            )
+
+            with connection.cursor() as data_cursor:
+                query = "DELETE FROM user WHERE student_number != 'admin'"
+                data_cursor.execute(query)
+
+            connection.commit()
+            return True
+
+        except DataDeletionException as e:
+            print(f"{e.__class__.__name__}: {e}")
+            return False
 
         finally:
             if 'connection' in locals() and connection.is_connected():

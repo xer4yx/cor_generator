@@ -333,7 +333,7 @@ class Student:
                     self.generate_cor()
 
                 case 5:
-                    return
+                    break
 
                 case _:
                     print("Invalid choice. Try again.")

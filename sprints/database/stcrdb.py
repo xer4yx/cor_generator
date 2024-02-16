@@ -73,6 +73,30 @@ class StCrDB:
             if 'connection' in locals() and connection.is_connected():
                 connection.close()
 
+    def delete_all_student_courses(self):
+        try:
+            connection = mysql.connector.connect(
+                host=self.host,
+                user=self.user,
+                password=self.password,
+                database=self.database
+            )
+
+            with connection.cursor() as data_cursor:
+                query = "DELETE FROM student_course"
+                data_cursor.execute(query)
+
+            connection.commit()
+            return True
+
+        except DataDeletionException as e:
+            print(f"{e.__class__.__name__}: {e}")
+            return False
+
+        finally:
+            if 'connection' in locals() and connection.is_connected():
+                connection.close()
+
     def select_student_courses(self, student_id: str):
         try:
             connection = mysql.connector.connect(
