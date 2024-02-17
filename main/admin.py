@@ -1,8 +1,6 @@
 import os
 import time
 import random
-
-from sprints.datasecurity import Security
 from sprints.database import popconfig
 from sprints.database.studentdb import StudentDB
 from sprints.database.userdb import UserDB
@@ -11,29 +9,33 @@ from sprints.database.stcrdb import StCrDB
 
 
 class Admin:
-    def __init__(self):
+    def __init__(self):  # Initialize the tables
         self.__stdb = StudentDB()
         self.__udb = UserDB()
         self.__crdb = CourseDB()
         self.__stcr = StCrDB()
 
-    def _generate_student_id(self):
+    def _generate_student_id(self):  # ID Generator
         for i in range(101, 1000):
             id = time.strftime("%Y%m") + str(i)
             data = self.__stdb.get_student_num_all()
+
+            # Checks if the id is in the retrieved student numbers in the student_number column
             if id not in data:
-                return id
+                return id  # generated id not in table, it will return the generated id
+
+        # If loop was exhausted and all the generated student id in the table, it will return None
         return None
 
-    def add_user(self, student_id):
+    def add_user(self, student_id):  # Adds a single row of data in user table
         data = self.__stdb.get_student_num_all()
-        if student_id in data:
+        if student_id in data:  # Checks if the student is in the table
             password = str(input(f"Enter Password for {student_id}: ")).encode("utf-8")
             self.__udb.insert_user(student_id, password)
         else:
             print(f"Student {student_id} not found")
 
-    def _add_student(self):
+    def _add_student(self):  # Interface for adding a single row of data in student table
         os.system('cls')
         print("---Add Student to School Record---")
         fname = str(input("Enter given name: "))
@@ -43,6 +45,7 @@ class Admin:
         program = str(input("Enter Program: "))
         yr_lvl = int(input("Enter Year Level: "))
 
+        # If transaction return True, will trigger add_user method
         if self.__stdb.insert_student(fname, lname, student_no, college, program, yr_lvl):
             self.add_user(student_no)
             print(f"Record added successfully. "
@@ -50,7 +53,7 @@ class Admin:
         else:
             print(f"Student ID {student_no} failed to add")
 
-    def _add_course(self):
+    def _add_course(self):  # Interface for adding a single row of data in course table
         os.system('cls')
         course_code = str(input("Enter Course Code for the subject: "))
         title = str(input("Enter course name: "))
@@ -61,18 +64,28 @@ class Admin:
         room = eval(input("Enter room for the course. Leave blank for TBA: "))
         year = int(input("Enter year for the course: "))
         term = int(input("Enter term for the course: "))
+
+        # Checks if the course will be inserted in the table
         if self.__crdb.insert_single(course_code, title, section, units, days, time, year, term, room):
             print(f"Course Added successfully. "
                   f"Course ID: {course_code}")
         else:
             print(f"Course ID {course_code} failed to add")
 
+    # Interface for deleting a single row of data in student, user, and student_course table
     def _delete_student_data(self):
         os.system('cls')
         print("---Delete Student to School Record---")
         student_no = str(input("Enter Student Number: "))
         data = self.__stdb.get_student_num_all()
+
         if student_no in data and str(input(f"Do you want to delete the record?")) == 'Yes':
+            '''
+                If the student has a data in the table, it will delete the records first in the 
+                user and student_course table before in the student table. Data from user and
+                student_course must be deleted as it uses the student id from student table as
+                a foreign key therefore will cause an error when deleted prematurely.
+            '''
             self.__udb.delete_user(student_no)
             self.__stcr.delete_student_course(student_no)
             self.__stdb.delete_student(student_no)
@@ -80,13 +93,14 @@ class Admin:
         else:
             print("Invalid student record.")
 
+    # Interface for deleting a single row of data in course table
     def _delete_course(self):
         os.system('cls')
         print("---Delete Course to School Record---")
         course_code = str(input("Enter Course Code: "))
         section = str(input("Enter Section: "))
         data = self.__crdb.select_by_section(course_code, section)
-        if data:
+        if data:  # Check if the course exist
             if self.__crdb.delete_single_row(course_code, section):
                 print(f"Course {course_code} has been deleted")
             else:
@@ -94,13 +108,14 @@ class Admin:
         else:
             print("Course not found")
 
+    # Interface for updating a single row of data in course table
     def _update_course(self):
         os.system('cls')
         print("---Update Course---")
         course_code = str(input("Enter Course Code:"))
         section = str(input("Enter section for the course code:"))
         data = self.__crdb.select_by_section(course_code, section)
-        if data:
+        if data:  # Check if the course exists in the table
             choice = int(input("""
             Select what record you want to update
             [1] Title
@@ -112,7 +127,7 @@ class Admin:
             [7] Term
             
             Enter your choice: """))
-            match choice:
+            match choice:  # Choose what to update in the selected course
                 case 1:
                     title = str(input("Update course title: "))
                     self.__crdb.update_course(course_code, title=title)
@@ -146,6 +161,7 @@ class Admin:
         else:
             print("Course doesn't exist")
 
+    # Interface for updating a single row of data in student table
     def _update_student(self):
         os.system('cls')
         print("---Update Student Record---")
@@ -204,11 +220,15 @@ class Admin:
                 case _:
                     print(f"Column {choice} doesn't exist in the table")
 
-    def _student_populator(self, max_population=5):
+    def _student_populator(self, max_population=5):  # Method for automatically populating the student and user table
         faults = 0
         success = 0
 
         for _ in range(1, max_population + 1):
+            '''
+                You can use your own list inside a random.choice() to populate your own student table.
+                as for the simulation, I used a list from my own module to populate the table. 
+            '''
             first = random.choice(popconfig.STUDENT_COL1)
             last = random.choice(popconfig.STUDENT_COL2)
             id = self._generate_student_id()
@@ -225,21 +245,24 @@ class Admin:
 
         print(f"{self.__stdb.__class__.__name__} result: {success} data inserted while {faults} failures.")
 
-    def _course_populator(self, batch_size=100):
+    def _course_populator(self, batch_size=100):  # Method for automatically populating the course table
         faults = 0
         success = 0
-        course_data = []
+        course_data = []  # Store here the dict containing the details of  a single course
 
-        for code, title in zip(popconfig.COURSE_COL1, popconfig.COURSE_COL2):
+        for code, title in zip(popconfig.COURSE_COL1, popconfig.COURSE_COL2):  # Use two list with the same array size
             year = random.choice(popconfig.COURSE_COL8)
             term = random.choice(popconfig.COURSE_COL9)
             units = random.choice(popconfig.COURSE_COL4)
             sections_list = popconfig.COURSE_COL3[year - 1]
 
+            # Each course will have different sections with different schedule, time and room
             for sections in sections_list:
                 schedules = random.choice(popconfig.COURSE_COL5)
                 times = random.choice(popconfig.COURSE_COL6)
                 rooms = random.choice(popconfig.COURSE_COL7)
+
+                # Append the course
                 course_data.append({
                     "course_code": code,
                     "title": title,
@@ -251,13 +274,18 @@ class Admin:
                     "term": term,
                     "room": rooms
                 })
+
+                # This will check if the length of array is equal to the batch_size
                 if len(course_data) == batch_size:
+
+                    # Each dict in the list will be inserted in the table as a batch
                     if self.__crdb.insert_by_batch(course_data):
                         success += len(course_data)
                     else:
                         faults += len(course_data)
                     course_data = []
 
+        # If there are still remaining dicts in the list, it will be inserted to the table
         if course_data:
             if self.__crdb.insert_by_batch(course_data):
                 success += len(course_data)
@@ -266,6 +294,7 @@ class Admin:
 
         print(f"{self.__crdb.__class__.__name__} result: {success} data inserted while {faults} failures.")
 
+    # An interface for the table populator
     def populate_tables(self):
         os.system('cls')
         choice = str(input("""
@@ -283,7 +312,7 @@ class Admin:
         else:
             print("Invalid input. Please try again.")
 
-    def add_records_menu(self):
+    def add_records_menu(self):  # Menu for the insert interfaces
         os.system('cls')
         choice = int(input("""
         COR Generator - Insert Record
@@ -306,7 +335,7 @@ class Admin:
             case _:
                 print("Invalid choice. Please try again.")
 
-    def delete_records_menu(self):
+    def delete_records_menu(self):  # Menu for the delete interfaces
         os.system('cls')
         choice = int(input("""
         COR Generator - Insert Record
@@ -341,7 +370,7 @@ class Admin:
             case _:
                 print("Invalid choice. Please try again.")
 
-    def update_records_menu(self):
+    def update_records_menu(self):  # Menu for the delete interfaces
         os.system('cls')
         choice = int(input("""
         COR Generator - Insert Record

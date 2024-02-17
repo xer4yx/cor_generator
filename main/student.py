@@ -8,15 +8,18 @@ from sprints.database.stcrdb import StCrDB
 
 class Student:
     def __init__(self, student_id):
+        # Initializing  database
         self.__crdb = CourseDB()
         self.__stdb = StudentDB()
         self.__udb = UserDB()
         self.__stcrdb = StCrDB()
+
+        # Retrieve the datas needed for the logged in student
         self.__user_data = self.__udb.select_user(student_id)
         self.__student_data = self.__stdb.get_student_info(student_id)
         self.__stcr_data = self.__stcrdb.select_student_courses(student_id)
 
-        if self.__user_data:
+        if self.__user_data:  # Checks if the student has a data in the table. If not, set to None.
             self.__username, self.__password, self.__salt = (self.__user_data['student_number'],
                                                              self.__user_data['password'],
                                                              self.__user_data['salt'])
@@ -30,10 +33,16 @@ class Student:
             (self.__fname, self.__lname, self.__student_id, self.__college, self.__program, self.__year_lvl,
              self.__is_registered, self.__is_enrolled) = None, None, None, None, None, None, None, None
 
+        # Retrieve the data needed in course table
         self.__course_data_by_yr = self.__crdb.select_by_year(self.__year_lvl)
         self.__course_data_all = self.__crdb.select_all_row()
 
         if self.__course_data_by_yr:
+            '''
+                We get the sequence of the self.__course_data_by_yr and unpack it as a separate lists
+                then zip it. This means that we are transposing each column in the iterables as a row
+                and vice versa.
+            '''
             (self.__course_id, self.__title, self.__section, self.__units,
              self.__days, self.__time, self.__room, self.__year, self.__term) = zip(*self.__course_data_by_yr)
         else:
@@ -54,33 +63,41 @@ class Student:
             (self.__c_id, self.__s_id, self.__c_title, self.__c_year, self.__c_term, self.__c_section, self.__c_units,
              self.__c_days, self.__c_time, self.__c_room) = None, None, None, None, None, None, None, None, None, None
 
-    def view_curriculum(self):
+    def view_curriculum(self):  # View the courses from all the available year
         try:
+            # Check if there is no NoneType in each object
             if None not in (self.__all_course_id, self.__all_title, self.__all_units,
                             self.__all_year, self.__all_term):
 
-                courses = {}
+                courses = {} # Initialize a dict
                 for course_id, title, units, year, term in zip(
                         self.__all_course_id, self.__all_title, self.__all_units,
                         self.__all_year, self.__all_term
                 ):
+
+                    # Check if year and term is not a key in dict
                     if (year, term) not in courses:
+                        # If not key, add it as a key with a value of an empty list
                         courses[(year, term)] = []
-                    courses[(year, term)].append((course_id, title, units))
+                    courses[(year, term)].append((course_id, title, units))  # Append the value
 
                 for (year, term), courses in sorted(courses.items()):
+                    '''
+                        Prints out the courses, sorted by year and term. For each year and term, 
+                        it prints the year and term, followed by the details of each course in that term.
+                    '''
                     print(f"Year: {year}, Term: {term}")
                     for course in courses:
                         course_id, title, units = course
                         print(f"{course_id} - {title} ({units} units)")
                     print()
             else:
-                raise NullException("No courses offered.")
+                raise NullException("No courses offered.")  # Raise NullException if there is no course in each object
 
         except NullException as e:
             print(e)
 
-    def view_available_course(self):
+    def view_available_course(self):  # View courses available based on your year level
         try:
             if None not in (self.__course_id, self.__title, self.__section, self.__units,
                             self.__days, self.__time, self.__room, self.__year, self.__term):
@@ -106,7 +123,7 @@ class Student:
         except ValueError as ve:
             print(ve)
 
-    def view_selected_course(self):
+    def view_selected_course(self):  # Prints out the selected course
         try:
             if None not in (self.__c_id, self.__c_title, self.__c_year, self.__c_term, self.__c_section,
                             self.__c_units, self.__c_days, self.__c_time, self.__c_room):
@@ -122,22 +139,28 @@ class Student:
         except NullException as e:
             print(e)
 
-    def choose_course(self):
+    def choose_course(self):  # Method for choosing what block/section the user will choose
         try:
             if None not in (self.__course_id, self.__title, self.__section, self.__units,
                             self.__days, self.__time, self.__room, self.__year, self.__term):
                 section_input = str(input("Enter the section you want to enroll in: "))
                 year_level_input = int(input("Enter your current year level: "))
 
-                available_courses = []
+                available_courses = []  # Initialize a list
                 for course_id, title, section, units, days, time, room, year, term in zip(
                         self.__course_id, self.__title, self.__section, self.__units,
                         self.__days, self.__time, self.__room, self.__year, self.__term
                 ):
+                    # Check if the inputs are the same in the objects iterated
                     if section == section_input and year == year_level_input:
+                        # Append tuple into the list
                         available_courses.append((course_id, title, year, term, section, units, days, time, room))
 
                 if available_courses:
+                    '''
+                        If there is an object in the list, it will iterate 
+                        each tuple then unpack it to add to the table.
+                    '''
                     for course in available_courses:
                         if self.__stcrdb.add_student_course(self.__student_id, *course):
                             print(f"Enrolled in course {course[0]}.")
@@ -148,6 +171,7 @@ class Student:
             else:
                 print(f"No courses offered for {self.__student_id}")
 
+            # Update the objects
             data = self.__stcrdb.select_student_courses(self.__student_id)
             if data:
                 (self.__c_id, self.__s_id, self.__c_title, self.__c_year, self.__c_term, self.__c_section,
@@ -156,7 +180,7 @@ class Student:
         except ValueError as ve:
             print(ve)
 
-    def delete_selected_course(self):
+    def delete_selected_course(self):  # Remove the selected block to the table
         try:
             choice = str(input("""
             Do you want to remove your selected courses?
@@ -179,12 +203,13 @@ class Student:
         except ValueError as e:
             print(e)
 
-    def change_password(self):
+    def change_password(self):  # Method for changing password in the user table
         try:
             old_password = input("Enter old password: ").encode()
             new_password = input("Enter new password: ").encode()
             salt, hashed_new = Security.hash_string(new_password)
 
+            # Check if the password is the same as the input
             if not Security.check_password(old_password, self.__password.encode(), self.__salt.encode()):
                 raise CredentialException("Wrong password")
 
