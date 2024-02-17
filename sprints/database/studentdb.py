@@ -100,8 +100,8 @@ class StudentDB:
                                                               ('is_enrolled', is_enrolled),
                                                               ('is_admin', is_admin)] if val is not None]
 
-                query = (f"UPDATE student SET SET {', '.join([f'{col} = %s' for col, val in update_columns])}"
-                         f"WHERE student_number = %s")
+                query = (f"UPDATE student SET  {', '.join([f'{col} = %s' for col, val in update_columns])}"
+                         f" WHERE student_number = %s")
                 data_cursor = data_cursor.execute(query, [val for col, val in update_columns] + [student_no])
 
             connection.commit()

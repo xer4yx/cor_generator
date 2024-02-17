@@ -18,7 +18,12 @@ class Admin:
         self.__stcr = StCrDB()
 
     def _generate_student_id(self):
-        return time.strftime("%y%m") + str(random.randint(10000, 99999))
+        for i in range(101, 1000):
+            id = time.strftime("%Y%m") + str(i)
+            data = self.__stdb.get_student_num_all()
+            if id not in data:
+                return id
+        return None
 
     def add_user(self, student_id):
         data = self.__stdb.get_student_num_all()
@@ -199,11 +204,9 @@ class Admin:
                 case _:
                     print(f"Column {choice} doesn't exist in the table")
 
-    def _student_populator(self, max_population=5, batch_size=100):
+    def _student_populator(self, max_population=5):
         faults = 0
         success = 0
-        student_data = []
-        user_data = []
 
         for _ in range(1, max_population + 1):
             first = random.choice(popconfig.STUDENT_COL1)
@@ -214,36 +217,11 @@ class Admin:
                 else random.choice(popconfig.STUDENT_COL5[1])
             year = random.choice(popconfig.STUDENT_COL6)
             enrolled = random.choice([True, False])
-            salt, password = Security.hash_string(id.encode())
-            student_data.append({
-                "first_name": first,
-                "last_name": last,
-                "student_number": id,
-                "college": college,
-                "program": course,
-                "year_lvl": year,
-                "is_registered": True,
-                "is_enrolled": enrolled,
-                "is_admin": False
-            })
-            user_data.append({
-                "student_number": id,
-                "password": password,
-                "salt": salt
-            })
-            if len(student_data) and len(user_data) == batch_size:
-                if self.__stdb.insert_student_by_batch(student_data) and self.__udb.insert_user_by_batch(user_data):
-                    success += len(student_data)
-                else:
-                    faults += len(student_data)
-                student_data = []
-                user_data = []
-
-        if student_data and user_data:
-            if self.__stdb.insert_student_by_batch(student_data) and self.__udb.insert_user_by_batch(user_data):
-                success += len(student_data)
+            if self.__stdb.insert_student(first, last, id, college, course, year, is_enrolled=enrolled):
+                self.__udb.insert_user(id, id.encode())
+                success += 1
             else:
-                faults += len(student_data)
+                faults += 1
 
         print(f"{self.__stdb.__class__.__name__} result: {success} data inserted while {faults} failures.")
 
